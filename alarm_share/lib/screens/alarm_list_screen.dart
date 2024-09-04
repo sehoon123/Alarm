@@ -18,25 +18,22 @@ class AlarmListScreen extends StatefulWidget {
 class _AlarmListScreenState extends State<AlarmListScreen> with RouteAware {
   int _currentPage = 0;
   final PageController _pageController = PageController();
-  List<Alarm> _alarms = [];
+  final List<Alarm> _alarms = [
+    Alarm(
+        id: '1',
+        time: const TimeOfDay(hour: 7, minute: 0),
+        repeatDays: [true, false, false, false, false, false, false],
+        sound: '비모'),
+    Alarm(
+        id: '2',
+        time: const TimeOfDay(hour: 8, minute: 0),
+        repeatDays: [false, true, false, false, false, false, false],
+        sound: '비모'),
+  ]; // 변경: 고정된 2개의 알람으로 초기화
 
   @override
   void initState() {
     super.initState();
-    _loadAlarms();
-  }
-
-  @override
-  void didPopNext() {
-    // Called when the user returns to this screen from another
-    _loadAlarms();
-  }
-
-  Future<void> _loadAlarms() async {
-    List<Alarm> alarms = await AlarmService.getAlarms();
-    setState(() {
-      _alarms = alarms;
-    });
   }
 
   void _toggleAlarm(Alarm alarm, bool isEnabled) {
@@ -96,11 +93,37 @@ class _AlarmListScreenState extends State<AlarmListScreen> with RouteAware {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text(
+          '홈',
+          style: TextStyle(
+            color: Colors.black,
+            fontSize: 30,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        actions: const [ // 앱바 오른쪽에 추가할 위젯
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16.0),
+            child: Center(
+              child: Text(
+                '보유코인: 100', // 보유코인 표시
+                style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 20,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
       body: Column(
         children: [
           // Notification Section with PageView and Indicator
+          //Empty space
+          // SizedBox(height: MediaQuery.of(context).size.height * 0.03),
           SizedBox(
-            height: 120, // Set height for the notification area
+            height: 190, // Set height for the notification area
             child: Column(
               children: [
                 Expanded(
@@ -153,12 +176,19 @@ class _AlarmListScreenState extends State<AlarmListScreen> with RouteAware {
                     },
                   ),
           ),
-          // Test Alarm Button
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: ElevatedButton(
-              onPressed: _scheduleTestAlarm,
-              child: const Text('5초 후 알람 울리기'),
+          // 기존 SizedBox를 카드 형식으로 변경
+          Card(
+            margin: const EdgeInsets.all(16),
+            color: Colors.black.withOpacity(0.7),
+            elevation: 4, // 카드의 그림자 효과
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10), // 모서리 둥글게
+            ),
+            child: const SizedBox(
+              height: 100,
+              child: Center(
+                child: Text('카드 내용'), // 카드 안의 내용
+              ),
             ),
           ),
         ],
@@ -213,54 +243,111 @@ class AlarmListItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: ListTile(
-        onTap: () async {
-          final result = await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => AlarmSettingsScreen(alarm: alarm),
+      child: Column(
+        children: [
+          // Upper part with alarm title, time, and switch
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.grey[900], // Dark gray background for the top
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(8),
+                topRight: Radius.circular(8),
+              ),
             ),
-          );
+            child: ListTile(
+              onTap: () async {
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AlarmSettingsScreen(alarm: alarm),
+                  ),
+                );
 
-          if (result != null && result is Alarm) {
-            onUpdate(result);
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('알람이 저장되었습니다.')),
-            );
-          }
-        },
-        title: const Text(
-          '알람 설정',
-          style: TextStyle(
-            color: Colors.purple,
-            fontWeight: FontWeight.bold,
+                if (result != null && result is Alarm) {
+                  onUpdate(result);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('알람이 저장되었습니다.')),
+                  );
+                }
+              },
+              title: Text(
+                alarm.id == 1
+                    ? '기상 알람 설정'
+                    : '취침 알람 설정', // Updated to match the screenshot
+                style: const TextStyle(
+                  color: Colors.purple,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    alarm.time.format(context),
+                    style: const TextStyle(
+                      fontSize: 30,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+              trailing: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Switch(
+                    value: alarm.isEnabled,
+                    onChanged: (value) {
+                      onToggle(alarm, value);
+                    },
+                  ),
+                ],
+              ),
+            ),
           ),
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              alarm.time.format(context),
-              style: Theme.of(context).textTheme.titleLarge,
+          // Lower part with the repeat days in light gray
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: const BoxDecoration(
+              color: Colors.grey,
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(8),
+                bottomRight: Radius.circular(8),
+              ),
             ),
-            const SizedBox(height: 8),
-            Text(
-              _getRepeatDaysText(),
-              style: Theme.of(context).textTheme.titleSmall,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: List.generate(7, (index) {
+                // Array for Korean weekdays ['월', '화', '수', '목', '금', '토', '일']
+                final List<String> weekdays = [
+                  '월',
+                  '화',
+                  '수',
+                  '목',
+                  '금',
+                  '토',
+                  '일'
+                ];
+                final isSelected =
+                    alarm.repeatDays[index]; // Check if the day is selected
+
+                return Text(
+                  weekdays[index],
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: isSelected
+                        ? Colors.black
+                        : Colors.grey[
+                            200], // Bright for selected, gray for non-selected
+                  ),
+                );
+              }),
             ),
-            const SizedBox(height: 8),
-            Text(
-              'Sound: ${alarm.sound}',
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-          ],
-        ),
-        trailing: Switch(
-          value: alarm.isEnabled,
-          onChanged: (value) {
-            onToggle(alarm, value);
-          },
-        ),
+          ),
+        ],
       ),
     );
   }

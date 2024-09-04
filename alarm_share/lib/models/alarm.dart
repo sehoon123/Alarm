@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 
 class Alarm {
   final String id;
-  final TimeOfDay time;
-  final List<bool> repeatDays;
-  final String sound; // New sound property
-  bool isEnabled; // New isEnabled property
+  TimeOfDay time;
+  List<bool> repeatDays;
+  String sound;
+  bool isEnabled;
 
   Alarm({
     required this.id,
