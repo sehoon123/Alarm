@@ -6,7 +6,6 @@ import 'package:alarm/alarm.dart';
 import 'package:alarm_share/screens/edit_alarm.dart';
 import 'package:alarm_share/screens/ring.dart';
 import 'package:alarm_share/screens/shortcut_button.dart';
-import 'package:alarm_share/services/alarm_service.dart';
 import 'package:alarm_share/services/permissions_service.dart';
 import 'package:alarm_share/widgets/tile.dart';
 import 'package:flutter/material.dart';

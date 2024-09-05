@@ -94,6 +94,8 @@ flutter:
   # see https://flutter.dev/custom-fonts/#from-packages
 
   assets:
-    - assets/
-    - assets/alarm_bg.png
-    - assets/sounds/alarm_sound_1.mp3
+    - assets/sounds/marimba.mp3
+    - assets/sounds/nokia.mp3
+    - assets/sounds/mozart.mp3
+    - assets/sounds/star_wars.mp3
+    - assets/sounds/one_piece.mp3
