@@ -37,7 +37,6 @@ dependencies:
   provider: ^6.1.2
   shared_preferences: ^2.3.2
   file_picker: ^5.0.1
-  just_audio: ^0.9.30
 
 
 dev_dependencies:
@@ -95,4 +94,4 @@ flutter:
 
   assets:
     - assets/alarm_bg.png
-    - assets/sounds/
+    - assets/sounds/alarm_sound_1.mp3

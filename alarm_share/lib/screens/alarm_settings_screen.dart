@@ -3,7 +3,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:alarm_share/models/alarm.dart';
 import 'package:alarm_share/services/alarm_service.dart';
-import 'package:just_audio/just_audio.dart'; // For sound preview
 
 class AlarmSettingsScreen extends StatefulWidget {
   final Alarm? alarm;
@@ -21,7 +20,6 @@ class _AlarmSettingsScreenState extends State<AlarmSettingsScreen> {
   double _volume = 0.5;
   bool _vibration = true;
   String _selectedSound = '비모';
-  final AudioPlayer _audioPlayer = AudioPlayer();
 
   @override
   void initState() {
@@ -36,7 +34,6 @@ class _AlarmSettingsScreenState extends State<AlarmSettingsScreen> {
 
   @override
   void dispose() {
-    _audioPlayer.dispose();
     super.dispose();
   }
 
@@ -46,8 +43,8 @@ class _AlarmSettingsScreenState extends State<AlarmSettingsScreen> {
     // Map built-in sounds to friendly names
     if (_selectedSound == 'assets/sounds/alarm_sound_1.mp3')
       return '기본 알람 사운드 1';
-    if (_selectedSound == 'assets/sounds/alarm_sound_2.mp3')
-      return '기본 알람 사운드 2';
+    if (_selectedSound == 'assets/sounds/alarm_sound_1.mp3')
+      return '기본 알람 사운드 1';
     // For custom sounds, display the file name
     return _selectedSound.split('/').last;
   }
@@ -146,7 +143,7 @@ class _AlarmSettingsScreenState extends State<AlarmSettingsScreen> {
                 ),
                 ListTile(
                   title: const Text('미리 듣기'),
-                  onTap: _previewSound,
+                  // onTap: _previewSound,
                 ),
               ],
             ),
@@ -244,28 +241,6 @@ class _AlarmSettingsScreenState extends State<AlarmSettingsScreen> {
       setState(() {
         _selectedSound = result.files.single.path!;
       });
-    }
-  }
-
-  void _previewSound() async {
-    try {
-      if (_selectedSound == '비모') {
-        // Play default '비모' sound
-        await _audioPlayer.setAsset('assets/sounds/default_bimo.mp3');
-      } else if (_selectedSound.startsWith('assets/')) {
-        // Play built-in sound from assets
-        await _audioPlayer.setAsset(_selectedSound);
-      } else {
-        // Play custom sound from file path
-        await _audioPlayer.setFilePath(_selectedSound);
-      }
-      _audioPlayer.setVolume(_volume);
-      _audioPlayer.play();
-    } catch (e) {
-      // Handle error (e.g., file not found)
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('사운드 재생에 실패했습니다: $e')),
-      );
     }
   }
 }
