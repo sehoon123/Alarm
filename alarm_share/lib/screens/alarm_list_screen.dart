@@ -1,8 +1,10 @@
+import 'package:alarm_share/services/alarm_service.dart';
 import 'package:flutter/material.dart';
 import 'package:alarm_share/models/alarm.dart';
-import 'package:alarm_share/services/alarm_service.dart';
+import 'package:alarm_share/services/notification_service.dart';
 import 'package:alarm_share/widgets/notification_carousel.dart';
 import 'package:alarm_share/widgets/alarm_list_item.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 class AlarmListScreen extends StatefulWidget {
   const AlarmListScreen({super.key});
@@ -55,6 +57,24 @@ class _AlarmListScreenState extends State<AlarmListScreen> with RouteAware {
     AlarmService.updateAlarm(updatedAlarm.id, updatedAlarm);
   }
 
+  void _testNotification() {
+    // 테스트용 알림 생성 및 즉시 표시
+    NotificationService.flutterLocalNotificationsPlugin.show(
+      0,
+      '알림 테스트',
+      '이것은 테스트 알림입니다.',
+      const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'alarm_channel',
+          'Alarms',
+          channelDescription: '알람 알림 채널',
+          importance: Importance.defaultImportance,
+          priority: Priority.defaultPriority,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -99,17 +119,27 @@ class _AlarmListScreenState extends State<AlarmListScreen> with RouteAware {
                     },
                   ),
           ),
-          Card(
-            margin: const EdgeInsets.all(16),
-            color: Colors.black.withOpacity(0.7),
-            elevation: 4,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: const SizedBox(
-              height: 100,
-              child: Center(
-                child: Text('카드 내용'),
+          GestureDetector(
+            onTap: _testNotification,
+            child: Card(
+              margin: const EdgeInsets.all(16),
+              color: Colors.black.withOpacity(0.7),
+              elevation: 4,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const SizedBox(
+                height: 100,
+                child: Center(
+                  child: Text(
+                    '알림 테스트',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
               ),
             ),
           ),

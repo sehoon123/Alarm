@@ -3,9 +3,9 @@ import 'package:alarm_share/screens/main_screen.dart';
 import 'package:alarm_share/services/notification_service.dart';
 import 'package:alarm_share/utils/timezone_setup.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  NotificationService.initialize();
+  await NotificationService.initialize();
   TimezoneSetup.initialize();
   runApp(const MyApp());
 }

@@ -39,7 +39,7 @@ class AlarmService {
   static Future<void> scheduleAlarm(Alarm alarm) async {
     // Schedule the alarm using FlutterLocalNotificationsPlugin or another service
     final tz.TZDateTime scheduledDate = tz.TZDateTime.from(
-      DateTime.now().add(const Duration(seconds: 10)), // example time for demo
+      DateTime.now().add(const Duration(seconds: 1)), // example time for demo
       tz.local,
     );
     await _notificationsPlugin.zonedSchedule(
