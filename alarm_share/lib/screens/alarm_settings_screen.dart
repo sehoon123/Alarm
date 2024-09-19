@@ -163,20 +163,17 @@ class _AlarmSettingsScreenState extends State<AlarmSettingsScreen> {
       time: TimeOfDay.fromDateTime(_selectedTime),
       repeatDays: _selectedDays,
       sound: _selectedSound,
-      isEnabled: widget.alarm?.isEnabled ?? true,
+      isEnabled: true,
     );
 
     if (widget.alarm != null) {
       await AlarmService.updateAlarm(newAlarm.id, newAlarm);
     } else {
       await AlarmService.saveAlarm(newAlarm);
+      await AlarmService.scheduleAlarm(newAlarm);
     }
 
-    AlarmService.scheduleAlarm(
-      newAlarm,
-    );
-
-    Navigator.pop(context, newAlarm); // Pass the updated alarm back
+    Navigator.pop(context, newAlarm);
   }
 
   void _selectSound() {

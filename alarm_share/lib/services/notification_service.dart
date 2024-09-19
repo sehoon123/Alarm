@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 class NotificationService {
@@ -22,12 +21,13 @@ class NotificationService {
 
   static Future<void> _createNotificationChannel() async {
     const AndroidNotificationChannel channel = AndroidNotificationChannel(
-      'alarm_channel',
+      'alarm_channel_01',
       'Alarms',
       description: '알람 알림 채널',
-      importance: Importance.max,
+      importance: Importance.high, // 중요도 높음으로 설정
       playSound: true,
       enableVibration: true,
+      sound: RawResourceAndroidNotificationSound('alarm_sound_1'), // 확장자 제외
     );
 
     await flutterLocalNotificationsPlugin
@@ -38,32 +38,6 @@ class NotificationService {
 
   static void _onDidReceiveNotificationResponse(
       NotificationResponse notificationResponse) {
-    final String? payload = notificationResponse.payload;
-    if (payload != null) {
-      debugPrint('notification payload: $payload');
-    }
-  }
-
-  static Future<void> showNotification({
-    required int id,
-    required String title,
-    required String body,
-    String? payload,
-  }) async {
-    await flutterLocalNotificationsPlugin.show(
-      id,
-      title,
-      body,
-      NotificationDetails(
-        android: AndroidNotificationDetails(
-          'alarm_channel',
-          'Alarms',
-          channelDescription: '알람 알림 채널',
-          importance: Importance.max,
-          priority: Priority.high,
-        ),
-      ),
-      payload: payload,
-    );
+    // 알람이 울릴 때 수행할 작업을 여기에 추가할 수 있습니다.
   }
 }

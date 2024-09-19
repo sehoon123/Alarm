@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:alarm_share/screens/main_screen.dart';
 import 'package:alarm_share/services/notification_service.dart';
+import 'package:alarm_share/services/alarm_service.dart';
 import 'package:alarm_share/utils/timezone_setup.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await NotificationService.initialize();
+  await AlarmService.initialize();
   TimezoneSetup.initialize();
+
+  await AlarmService.printStoredAlarms();
+
   runApp(const MyApp());
 }
 

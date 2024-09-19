@@ -14,47 +14,55 @@ class AlarmListScreen extends StatefulWidget {
 }
 
 class _AlarmListScreenState extends State<AlarmListScreen> with RouteAware {
-  final List<Alarm> _alarms = [
-    Alarm(
-        id: '1',
-        time: const TimeOfDay(hour: 7, minute: 0),
-        repeatDays: [true, false, false, false, false, false, false],
-        sound: '비모'),
-    Alarm(
-        id: '2',
-        time: const TimeOfDay(hour: 8, minute: 0),
-        repeatDays: [false, true, false, false, false, false, false],
-        sound: '비모'),
-  ];
+  List<Alarm> _alarms = [];
 
   @override
   void initState() {
     super.initState();
+    _loadAlarms();
   }
 
-  void _toggleAlarm(Alarm alarm, bool isEnabled) {
+  Future<void> _loadAlarms() async {
+    final alarms = await AlarmService.getAlarms();
     setState(() {
-      alarm.isEnabled = isEnabled;
+      _alarms = alarms;
     });
+  }
 
-    AlarmService.updateAlarm(alarm.id, alarm);
-
-    if (isEnabled) {
-      AlarmService.scheduleAlarm(alarm);
-    } else {
-      AlarmService.cancelAlarm(alarm.id);
+  Future<void> _toggleAlarm(Alarm alarm, bool isEnabled) async {
+    try {
+      if (isEnabled) {
+        await AlarmService.scheduleAlarm(alarm);
+      } else {
+        await AlarmService.cancelAlarm(alarm.id);
+      }
+      await AlarmService.updateAlarm(
+          alarm.id, alarm.copyWith(isEnabled: isEnabled));
+      setState(() {
+        alarm.isEnabled = isEnabled;
+      });
+    } catch (e) {
+      debugPrint('Error toggling alarm: $e');
+      // 에러 처리 로직 추가
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('알람 상태 변경 중 오류가 발생했습니다: $e')),
+      );
     }
   }
 
-  void _updateAlarm(Alarm updatedAlarm) {
-    setState(() {
-      int index = _alarms.indexWhere((alarm) => alarm.id == updatedAlarm.id);
-      if (index != -1) {
-        _alarms[index] = updatedAlarm;
-      }
-    });
-
-    AlarmService.updateAlarm(updatedAlarm.id, updatedAlarm);
+  Future<void> _updateAlarm(Alarm updatedAlarm) async {
+    try {
+      await AlarmService.updateAlarm(updatedAlarm.id, updatedAlarm);
+      setState(() {
+        int index = _alarms.indexWhere((alarm) => alarm.id == updatedAlarm.id);
+        if (index != -1) {
+          _alarms[index] = updatedAlarm;
+        }
+      });
+    } catch (e) {
+      debugPrint('Error updating alarm: $e');
+      // 에러 처리 로직 추가
+    }
   }
 
   void _testNotification() {
@@ -65,11 +73,14 @@ class _AlarmListScreenState extends State<AlarmListScreen> with RouteAware {
       '이것은 테스트 알림입니다.',
       const NotificationDetails(
         android: AndroidNotificationDetails(
-          'alarm_channel',
+          'alarm_channel_01',
           'Alarms',
           channelDescription: '알람 알림 채널',
           importance: Importance.defaultImportance,
           priority: Priority.defaultPriority,
+          sound: RawResourceAndroidNotificationSound('alarm_sound_1'),
+          playSound: true,
+          enableVibration: true,
         ),
       ),
     );

@@ -1,3 +1,4 @@
+import 'package:alarm_share/services/alarm_service.dart';
 import 'package:flutter/material.dart';
 import 'package:alarm_share/models/alarm.dart';
 import 'package:alarm_share/screens/alarm_settings_screen.dart';
@@ -41,10 +42,23 @@ class AlarmListItem extends StatelessWidget {
                 );
 
                 if (result != null && result is Alarm) {
-                  onUpdate(result);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('알람이 저장되었습니다.')),
-                  );
+                  try {
+                    await AlarmService.updateAlarm(result.id, result);
+                    if (result.isEnabled) {
+                      await AlarmService.scheduleAlarm(result);
+                    } else {
+                      await AlarmService.cancelAlarm(result.id);
+                    }
+                    await onUpdate(result);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('알람이 저장되었습니다.')),
+                    );
+                  } catch (e) {
+                    debugPrint('Error updating alarm: $e');
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('알람 업데이트 중 오류가 발생했습니다: $e')),
+                    );
+                  }
                 }
               },
               title: Text(
