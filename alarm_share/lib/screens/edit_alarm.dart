@@ -21,6 +21,7 @@ class _ExampleAlarmEditScreenState extends State<ExampleAlarmEditScreen> {
   late bool vibrate;
   late double? volume;
   late String assetAudio;
+  List<bool> selectedDays = List.generate(7, (_) => false);
 
   @override
   void initState() {
@@ -40,6 +41,8 @@ class _ExampleAlarmEditScreenState extends State<ExampleAlarmEditScreen> {
       vibrate = widget.alarmSettings!.vibrate;
       volume = widget.alarmSettings!.volume;
       assetAudio = widget.alarmSettings!.assetAudioPath;
+      // 요일 선택 초기화
+      // selectedDays = widget.alarmSettings!.selectedDays ?? List.generate(7, (_) => false);
     }
   }
 
@@ -83,6 +86,43 @@ class _ExampleAlarmEditScreenState extends State<ExampleAlarmEditScreen> {
     }
   }
 
+  Future<void> setPeriodicAlarms(AlarmSettings alarmSettings) async {
+    const nbDays = 7; // Number of following days to potentially set alarm
+    final time = TimeOfDay.fromDateTime(alarmSettings.dateTime); // Time of the periodic alarm
+    final days = [
+      if (selectedDays[0]) DateTime.monday,
+      if (selectedDays[1]) DateTime.tuesday,
+      if (selectedDays[2]) DateTime.wednesday,
+      if (selectedDays[3]) DateTime.thursday,
+      if (selectedDays[4]) DateTime.friday,
+      if (selectedDays[5]) DateTime.saturday,
+      if (selectedDays[6]) DateTime.sunday,
+    ]; // Days of the week to set the alarm
+
+    final now = DateTime.now();
+
+    // Loop through the next days
+    for (var i = 0; i < nbDays; i++) {
+      final dateTime = DateTime(
+        now.year,
+        now.month,
+        now.day,
+        time.hour,
+        time.minute,
+      ).add(Duration(days: i));
+
+      if (days.contains(dateTime.weekday)) {
+        final periodicAlarmSettings = alarmSettings.copyWith(
+          id: dateTime.day,
+          dateTime: dateTime,
+        );
+        await Alarm.set(
+          alarmSettings: periodicAlarmSettings,
+        ); // If the alarm was already set, it will just override it
+      }
+    }
+  }
+
   AlarmSettings buildAlarmSettings() {
     final id = creating
         ? DateTime.now().millisecondsSinceEpoch % 10000 + 1
@@ -102,6 +142,7 @@ class _ExampleAlarmEditScreenState extends State<ExampleAlarmEditScreen> {
         hasStopButton: true,
         stopButtonText: 'Stop the alarm',
       ),
+      // selectedDays: selectedDays,
     );
     return alarmSettings;
   }
@@ -109,15 +150,10 @@ class _ExampleAlarmEditScreenState extends State<ExampleAlarmEditScreen> {
   void saveAlarm() {
     if (loading) return;
     setState(() => loading = true);
-    Alarm.set(alarmSettings: buildAlarmSettings()).then((res) {
-      if (res && mounted) Navigator.pop(context, true);
+    final alarmSettings = buildAlarmSettings();
+    setPeriodicAlarms(alarmSettings).then((_) {
+      if (mounted) Navigator.pop(context, true);
       setState(() => loading = false);
-    });
-  }
-
-  void deleteAlarm() {
-    Alarm.stop(widget.alarmSettings!.id).then((res) {
-      if (res && mounted) Navigator.pop(context, true);
     });
   }
 
@@ -175,6 +211,34 @@ class _ExampleAlarmEditScreenState extends State<ExampleAlarmEditScreen> {
                     .copyWith(color: Colors.blueAccent),
               ),
             ),
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: List.generate(7, (index) {
+              final days = ['월', '화', '수', '목', '금', '토', '일'];
+              return GestureDetector(
+                onTap: () {
+                  setState(() {
+                    selectedDays[index] = !selectedDays[index];
+                  });
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(8.0),
+                  decoration: BoxDecoration(
+                    color: selectedDays[index]
+                        ? Colors.blueAccent
+                        : Colors.grey[200],
+                    borderRadius: BorderRadius.circular(8.0),
+                  ),
+                  child: Text(
+                    days[index],
+                    style: TextStyle(
+                      color: selectedDays[index] ? Colors.white : Colors.black,
+                    ),
+                  ),
+                ),
+              );
+            }),
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -276,18 +340,7 @@ class _ExampleAlarmEditScreenState extends State<ExampleAlarmEditScreen> {
                   )
                 : const SizedBox(),
           ),
-          if (!creating)
-            TextButton(
-              onPressed: deleteAlarm,
-              child: Text(
-                'Delete Alarm',
-                style: Theme.of(context)
-                    .textTheme
-                    .titleMedium!
-                    .copyWith(color: Colors.red),
-              ),
-            ),
-          const SizedBox(),
+          // 요일 선택 체크리스트 추가
         ],
       ),
     );
