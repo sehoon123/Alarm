@@ -184,19 +184,6 @@ class _AlarmListScreenState extends State<AlarmListScreen> {
           NotificationCard(text: '알림 텍스트 예시 1', clicked: () {}),
         ],
       ),
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.all(10),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            ExampleAlarmHomeShortcutButton(refreshAlarms: loadAlarms),
-            FloatingActionButton(
-              onPressed: () => navigateToAlarmScreen(null),
-              child: const Icon(Icons.alarm_add_rounded, size: 33),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
