@@ -5,6 +5,7 @@ import 'package:alarm_share/services/notification_service.dart';
 import 'package:alarm_share/widgets/notification_carousel.dart';
 import 'package:alarm_share/widgets/alarm_list_item.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:alarm_share/screens/alarm_ring_screen.dart';
 
 class AlarmListScreen extends StatefulWidget {
   const AlarmListScreen({super.key});
@@ -66,6 +67,7 @@ class _AlarmListScreenState extends State<AlarmListScreen> with RouteAware {
   }
 
   void _testNotification() {
+    debugPrint('testNotification');
     // 테스트용 알림 생성 및 즉시 표시
     NotificationService.flutterLocalNotificationsPlugin.show(
       0,
