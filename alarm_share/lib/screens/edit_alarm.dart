@@ -1,12 +1,17 @@
 import 'dart:io';
 
 import 'package:alarm/alarm.dart';
+import 'package:alarm_share/models/my_alarm_settings.dart';
+import 'package:alarm_share/services/selected_days_service.dart';
 import 'package:flutter/material.dart';
 
 class ExampleAlarmEditScreen extends StatefulWidget {
-  const ExampleAlarmEditScreen({super.key, this.alarmSettings});
+  final MyAlarmSettings? myAlarmSettings;
 
-  final AlarmSettings? alarmSettings;
+  const ExampleAlarmEditScreen({
+    Key? key,
+    this.myAlarmSettings,
+  }) : super(key: key);
 
   @override
   State<ExampleAlarmEditScreen> createState() => _ExampleAlarmEditScreenState();
@@ -26,7 +31,7 @@ class _ExampleAlarmEditScreenState extends State<ExampleAlarmEditScreen> {
   @override
   void initState() {
     super.initState();
-    creating = widget.alarmSettings == null;
+    creating = widget.myAlarmSettings == null;
 
     if (creating) {
       selectedDateTime = DateTime.now().add(const Duration(minutes: 1));
@@ -36,11 +41,11 @@ class _ExampleAlarmEditScreenState extends State<ExampleAlarmEditScreen> {
       volume = null;
       assetAudio = 'assets/sounds/marimba.mp3';
     } else {
-      selectedDateTime = widget.alarmSettings!.dateTime;
-      loopAudio = widget.alarmSettings!.loopAudio;
-      vibrate = widget.alarmSettings!.vibrate;
-      volume = widget.alarmSettings!.volume;
-      assetAudio = widget.alarmSettings!.assetAudioPath;
+      selectedDateTime = widget.myAlarmSettings!.alarmSettings.dateTime;
+      loopAudio = widget.myAlarmSettings!.alarmSettings.loopAudio;
+      vibrate = widget.myAlarmSettings!.alarmSettings.vibrate;
+      volume = widget.myAlarmSettings!.alarmSettings.volume;
+      assetAudio = widget.myAlarmSettings!.alarmSettings.assetAudioPath;
       // 요일 선택 초기화
       // selectedDays = widget.alarmSettings!.selectedDays ?? List.generate(7, (_) => false);
     }
@@ -86,47 +91,27 @@ class _ExampleAlarmEditScreenState extends State<ExampleAlarmEditScreen> {
     }
   }
 
-  Future<void> setPeriodicAlarms(AlarmSettings alarmSettings) async {
-    const nbDays = 7; // Number of following days to potentially set alarm
-    final time = TimeOfDay.fromDateTime(alarmSettings.dateTime); // Time of the periodic alarm
-    final days = [
-      if (selectedDays[0]) DateTime.monday,
-      if (selectedDays[1]) DateTime.tuesday,
-      if (selectedDays[2]) DateTime.wednesday,
-      if (selectedDays[3]) DateTime.thursday,
-      if (selectedDays[4]) DateTime.friday,
-      if (selectedDays[5]) DateTime.saturday,
-      if (selectedDays[6]) DateTime.sunday,
-    ]; // Days of the week to set the alarm
+  Future<void> setPeriodicAlarms(MyAlarmSettings myAlarmSettings) async {
+    // 기존 알람 삭제
+    await Alarm.stop(myAlarmSettings.alarmSettings.id);
 
-    final now = DateTime.now();
+    // 새로운 알람 설정
+    final newAlarmSettings = myAlarmSettings.alarmSettings.copyWith(
+      dateTime: myAlarmSettings.alarmSettings.dateTime,
+    );
 
-    // Loop through the next days
-    for (var i = 0; i < nbDays; i++) {
-      final dateTime = DateTime(
-        now.year,
-        now.month,
-        now.day,
-        time.hour,
-        time.minute,
-      ).add(Duration(days: i));
+    await Alarm.set(alarmSettings: newAlarmSettings);
 
-      if (days.contains(dateTime.weekday)) {
-        final periodicAlarmSettings = alarmSettings.copyWith(
-          id: dateTime.day,
-          dateTime: dateTime,
-        );
-        await Alarm.set(
-          alarmSettings: periodicAlarmSettings,
-        ); // If the alarm was already set, it will just override it
-      }
-    }
+    // selectedDays 저장
+    await SelectedDaysService.saveSelectedDays(newAlarmSettings.id, myAlarmSettings.selectedDays);
+
+    print('알람 설정됨: ID=${newAlarmSettings.id}, 시간=${newAlarmSettings.dateTime}, 선택된 요일=${myAlarmSettings.selectedDays}');
   }
 
   AlarmSettings buildAlarmSettings() {
     final id = creating
         ? DateTime.now().millisecondsSinceEpoch % 10000 + 1
-        : widget.alarmSettings!.id;
+        : widget.myAlarmSettings!.alarmSettings.id;
 
     final alarmSettings = AlarmSettings(
       id: id,
@@ -151,7 +136,7 @@ class _ExampleAlarmEditScreenState extends State<ExampleAlarmEditScreen> {
     if (loading) return;
     setState(() => loading = true);
     final alarmSettings = buildAlarmSettings();
-    setPeriodicAlarms(alarmSettings).then((_) {
+    setPeriodicAlarms(MyAlarmSettings(alarmSettings: alarmSettings, selectedDays: selectedDays)).then((_) {
       if (mounted) Navigator.pop(context, true);
       setState(() => loading = false);
     });

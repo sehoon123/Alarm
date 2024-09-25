@@ -3,14 +3,14 @@ import 'package:flutter/material.dart';
 class ExampleAlarmTile extends StatelessWidget {
   const ExampleAlarmTile({
     required this.title,
-    // required this.selectedDays,
+    required this.selectedDays,
     required this.onPressed,
     super.key,
     this.onDismissed,
   });
 
   final String title;
-  // final List<bool> selectedDays;
+  final List<bool> selectedDays;
   final void Function() onPressed;
   final void Function()? onDismissed;
 
@@ -19,11 +19,11 @@ class ExampleAlarmTile extends StatelessWidget {
     final days = ['월', '화', '수', '목', '금', '토', '일'];
     List<String> activeDays = [];
 
-    // for (int i = 0; i < selectedDays.length; i++) {
-    //   if (selectedDays[i]) {
-    //     activeDays.add(days[i]);
-    //   }
-    // }
+    for (int i = 0; i < selectedDays.length; i++) {
+      if (selectedDays[i]) {
+        activeDays.add(days[i]);
+      }
+    }
 
     return RawMaterialButton(
       onPressed: onPressed,
@@ -38,7 +38,6 @@ class ExampleAlarmTile extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 알람 시간과 화살표 아이콘
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -52,8 +51,6 @@ class ExampleAlarmTile extends StatelessWidget {
                 const Icon(Icons.keyboard_arrow_right_rounded, size: 35),
               ],
             ),
-            // const SizedBox(height: 8),
-            // 반복 요일 표시
             Text(
               activeDays.isNotEmpty ? activeDays.join(', ') : '반복 없음',
               style: TextStyle(

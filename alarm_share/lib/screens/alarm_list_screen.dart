@@ -3,10 +3,12 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:alarm/alarm.dart';
+import 'package:alarm_share/models/my_alarm_settings.dart';
 import 'package:alarm_share/screens/edit_alarm.dart';
 import 'package:alarm_share/screens/ring.dart';
 import 'package:alarm_share/screens/shortcut_button.dart';
 import 'package:alarm_share/services/permissions_service.dart';
+import 'package:alarm_share/services/selected_days_service.dart';
 import 'package:alarm_share/widgets/tile.dart';
 import 'package:flutter/material.dart';
 import 'package:alarm_share/widgets/notification_card.dart'; // Import the NotificationCard widget
@@ -26,7 +28,7 @@ class _AlarmListScreenState extends State<AlarmListScreen> {
   int _currentPage = 0;
   final PageController _pageController = PageController();
 
-  late List<AlarmSettings> alarms;
+  List<MyAlarmSettings> myAlarms = []; // 여기에 myAlarms 변수를 추가합니다.
 
   static StreamSubscription<AlarmSettings>? ringSubscription;
   static StreamSubscription<int>? updateSubscription;
@@ -45,10 +47,18 @@ class _AlarmListScreenState extends State<AlarmListScreen> {
     });
   }
 
-  void loadAlarms() {
+  Future<void> loadAlarms() async {
+    final alarmSettings = Alarm.getAlarms();
+    alarmSettings.sort((a, b) => a.dateTime.isBefore(b.dateTime) ? 0 : 1);
+
+    List<MyAlarmSettings> loadedAlarms = [];
+    for (var alarm in alarmSettings) {
+      List<bool> selectedDays = await SelectedDaysService.loadSelectedDays(alarm.id) ?? List.generate(7, (_) => false);
+      loadedAlarms.add(MyAlarmSettings(alarmSettings: alarm, selectedDays: selectedDays));
+    }
+
     setState(() {
-      alarms = Alarm.getAlarms();
-      alarms.sort((a, b) => a.dateTime.isBefore(b.dateTime) ? 0 : 1);
+      myAlarms = loadedAlarms; // 여기서 myAlarms를 업데이트합니다.
     });
   }
 
@@ -63,7 +73,7 @@ class _AlarmListScreenState extends State<AlarmListScreen> {
     loadAlarms();
   }
 
-  Future<void> navigateToAlarmScreen(AlarmSettings? settings) async {
+  Future<void> navigateToAlarmScreen(MyAlarmSettings? settings) async {
     final res = await showModalBottomSheet<bool?>(
       context: context,
       isScrollControlled: true,
@@ -73,7 +83,7 @@ class _AlarmListScreenState extends State<AlarmListScreen> {
       builder: (context) {
         return FractionallySizedBox(
           heightFactor: 0.75,
-          child: ExampleAlarmEditScreen(alarmSettings: settings),
+          child: ExampleAlarmEditScreen(myAlarmSettings: settings),
         );
       },
     );
@@ -161,20 +171,20 @@ class _AlarmListScreenState extends State<AlarmListScreen> {
           ),
           SizedBox(height: 10),
           Expanded(
-              child: alarms.isEmpty
-                  ? const Center(child: Text('No alarms set'))
+              child: myAlarms.isEmpty
+                  ? const Center(child: Text('알람이 설정되지 않았습니다'))
                   : ListView.separated(
-                      itemCount: alarms.length,
-                      separatorBuilder: (context, index) =>
-                          const Divider(height: 2),
+                      itemCount: myAlarms.length,
+                      separatorBuilder: (context, index) => const Divider(height: 1),
                       itemBuilder: (context, index) {
                         return ExampleAlarmTile(
-                          key: Key(alarms[index].id.toString()),
+                          key: Key(myAlarms[index].alarmSettings.id.toString()),
                           title: TimeOfDay(
-                            hour: alarms[index].dateTime.hour,
-                            minute: alarms[index].dateTime.minute,
+                            hour: myAlarms[index].alarmSettings.dateTime.hour,
+                            minute: myAlarms[index].alarmSettings.dateTime.minute,
                           ).format(context),
-                          onPressed: () => navigateToAlarmScreen(alarms[index]),
+                          selectedDays: myAlarms[index].selectedDays,
+                          onPressed: () => navigateToAlarmScreen(myAlarms[index]),
                         );
                       },
                     )),
