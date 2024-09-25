@@ -159,13 +159,14 @@ class _AlarmListScreenState extends State<AlarmListScreen> {
               ],
             ),
           ),
+          SizedBox(height: 10),
           Expanded(
               child: alarms.isEmpty
                   ? const Center(child: Text('No alarms set'))
                   : ListView.separated(
                       itemCount: alarms.length,
                       separatorBuilder: (context, index) =>
-                          const Divider(height: 1),
+                          const Divider(height: 2),
                       itemBuilder: (context, index) {
                         return ExampleAlarmTile(
                           key: Key(alarms[index].id.toString()),
@@ -174,10 +175,6 @@ class _AlarmListScreenState extends State<AlarmListScreen> {
                             minute: alarms[index].dateTime.minute,
                           ).format(context),
                           onPressed: () => navigateToAlarmScreen(alarms[index]),
-                          onDismissed: () {
-                            Alarm.stop(alarms[index].id)
-                                .then((_) => loadAlarms());
-                          },
                         );
                       },
                     )),
